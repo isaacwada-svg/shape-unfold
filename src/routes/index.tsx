@@ -34,6 +34,8 @@ const plans = [
   { id: "Daily", days: 1, price: 2500 }, { id: "Weekly", days: 7, price: 16000, save: "Save 9%" },
   { id: "Monthly", days: 30, price: 75000 }, { id: "Quarterly", days: 90, price: 202500, save: "Save 10%" },
 ];
+type Plan = (typeof plans)[number];
+const defaultPlan: Plan = { id: "Weekly", days: 7, price: 16000, save: "Save 9%" };
 
 const money = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
@@ -43,7 +45,7 @@ function Index() {
   const [step, setStep] = useState(1);
   const [pallets, setPallets] = useState(2);
   const [grade, setGrade] = useState("Chilled");
-  const [plan, setPlan] = useState(plans[1]);
+  const [plan, setPlan] = useState<Plan>(defaultPlan);
   const [state, setState] = useState("All states");
   const [type, setType] = useState("All");
   const [organisation, setOrganisation] = useState("");
@@ -55,7 +57,7 @@ function Index() {
   const total = plan.price * pallets;
 
   const navigate = (next: View) => { setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const openBooking = (facility: Facility) => { setBooking(facility); setGrade(facility.types.includes("Chilled") ? "Chilled" : facility.types[0]); setStep(1); };
+  const openBooking = (facility: Facility) => { setBooking(facility); setGrade(facility.types.includes("Chilled") ? "Chilled" : (facility.types[0] ?? "Frozen")); setStep(1); };
 
   return (
     <main className="min-h-screen bg-background text-foreground">
