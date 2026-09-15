@@ -64,7 +64,7 @@ function AuthPage() {
       <section className="auth-side">
         <Link to="/" className="brand-button">
           <img src={brandAsset.url} alt="L-PRES" />
-          <span><strong>National Cold Chain Grid</strong><small>Powered by L-PRES · Operated by Farm Alert Ltd</small></span>
+          <span><strong>National Cold Chain Grid</strong><small>Powered by L-PRES · Operated by <strong>Farm Alert Ltd</strong></small></span>
         </Link>
         <h1>Your cold chain, in one account.</h1>
         <p>Book pallet space, follow live facility conditions, download temperature records and manage payments in one place.</p>
