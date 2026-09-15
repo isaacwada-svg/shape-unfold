@@ -28,9 +28,10 @@ const facilities: Facility[] = [
 ];
 const money=(n:number)=>`₦${n.toLocaleString("en-NG")}`;
 function useLiveReadings(){
-  const [readings,setReadings]=useState<Record<string,LiveReading>>(()=>Object.fromEntries(facilities.map(f=>[f.id,{temp:Number.parseFloat(f.temp),humidity:f.humidity,voltage:230,available:f.cap-f.occ,direction:1,updated:new Date()}])));
-  useEffect(()=>{const timer=window.setInterval(()=>setReadings(current=>Object.fromEntries(facilities.map(f=>{const previous=current[f.id]??{temp:Number.parseFloat(f.temp),humidity:f.humidity,voltage:230,available:f.cap-f.occ,direction:1,updated:new Date()};const direction=Math.random()>.5?1:-1;return [f.id,{temp:Math.min(4.2,Math.max(2.2,previous.temp+direction*.1)),humidity:Math.min(54,Math.max(44,previous.humidity+(Math.random()>.5?1:-1))),voltage:Math.min(234,Math.max(226,previous.voltage+(Math.random()>.5?1:-1))),available:Math.min(f.cap,Math.max(0,previous.available+(Math.random()>.7?(Math.random()>.5?1:-1):0))),direction,updated:new Date()}]}))),1800);return()=>window.clearInterval(timer)},[]);
-  return readings;
+  const [mounted,setMounted]=useState(false);
+  const [readings,setReadings]=useState<Record<string,LiveReading>>(()=>Object.fromEntries(facilities.map(f=>[f.id,{temp:Number.parseFloat(f.temp),humidity:f.humidity,voltage:230,available:f.cap-f.occ,direction:1,updated:new Date(0)}])));
+  useEffect(()=>{setMounted(true);setReadings(current=>Object.fromEntries(facilities.map(f=>[f.id,{...(current[f.id]??{temp:Number.parseFloat(f.temp),humidity:f.humidity,voltage:230,available:f.cap-f.occ,direction:1}),updated:new Date()}])));const timer=window.setInterval(()=>setReadings(current=>Object.fromEntries(facilities.map(f=>{const previous=current[f.id]??{temp:Number.parseFloat(f.temp),humidity:f.humidity,voltage:230,available:f.cap-f.occ,direction:1,updated:new Date()};const direction=Math.random()>.5?1:-1;return [f.id,{temp:Math.min(4.2,Math.max(2.2,previous.temp+direction*.1)),humidity:Math.min(54,Math.max(44,previous.humidity+(Math.random()>.5?1:-1))),voltage:Math.min(234,Math.max(226,previous.voltage+(Math.random()>.5?1:-1))),available:Math.min(f.cap,Math.max(0,previous.available+(Math.random()>.7?(Math.random()>.5?1:-1):0))),direction,updated:new Date()}]}))),1800);return()=>window.clearInterval(timer)},[]);
+  return {readings,mounted};
 }
 
 function Index(){
