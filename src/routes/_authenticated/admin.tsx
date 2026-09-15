@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Check, LogOut, ShieldCheck, Thermometer, X } from "lucide-react";
+import { Check, Cpu, LogOut, Plus, ShieldCheck, Thermometer, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, money } from "@/lib/session";
 import brandAsset from "@/assets/lpres-brand.png.asset.json";
@@ -13,6 +13,12 @@ type AdminBooking = {
   email: string | null; facility_id: string; facilities: { name: string; code: string } | null;
 };
 type Facility = { id: string; name: string; code: string; capacity: number };
+type Device = {
+  id: string; facility_id: string; label: string; brand: string | null; model: string | null;
+  connection: string; mode: string; endpoint_url: string | null; poll_interval_seconds: number;
+  device_key: string; active: boolean; last_seen_at: string | null; notes: string | null;
+};
+const emptyDevice = { facility_id: "fct", label: "", brand: "", model: "", connection: "wifi", mode: "pull", endpoint_url: "", poll_interval_seconds: "300", notes: "" };
 
 function Admin() {
   const navigate = useNavigate();
