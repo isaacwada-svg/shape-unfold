@@ -85,7 +85,7 @@ function Dashboard() {
       <header className="grid-header">
         <Link to="/" className="brand-button">
           <img src={brandAsset.url} alt="L-PRES" />
-          <span><strong>National Cold Chain Grid</strong><small>Powered by L-PRES · Operated by Farm Alert Ltd</small></span>
+          <span><strong>National Cold Chain Grid</strong><small>Powered by L-PRES · Operated by <strong>Farm Alert Ltd</strong></small></span>
         </Link>
         <nav aria-label="Account navigation">
           <Link to="/" className="nav-link">Book storage</Link>
