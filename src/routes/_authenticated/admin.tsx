@@ -28,15 +28,43 @@ function Admin() {
   const [facilityId, setFacilityId] = useState("fct");
   const [reading, setReading] = useState("3.2");
   const [saved, setSaved] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [draft, setDraft] = useState(emptyDevice);
+  const [deviceMsg, setDeviceMsg] = useState("");
 
   const load = useCallback(async () => {
-    const [{ data: b }, { data: f }] = await Promise.all([
+    const [{ data: b }, { data: f }, { data: d }] = await Promise.all([
       supabase.from("bookings").select("id,reference,storage_class,pallets,start_date,days,total_amount,status,payment_status,organisation,contact_name,email,facility_id,facilities(name,code)").order("created_at", { ascending: false }),
       supabase.from("facilities").select("id,name,code,capacity").order("sort_order"),
+      supabase.from("facility_devices").select("id,facility_id,label,brand,model,connection,mode,endpoint_url,poll_interval_seconds,device_key,active,last_seen_at,notes").order("created_at", { ascending: false }),
     ]);
     setBookings((b as unknown as AdminBooking[]) ?? []);
     setFacilities((f as Facility[]) ?? []);
+    setDevices((d as Device[]) ?? []);
   }, []);
+
+  const saveDevice = async () => {
+    if (!draft.label.trim()) { setDeviceMsg("Give the device a name first."); return; }
+    const { error } = await supabase.from("facility_devices").insert({
+      facility_id: draft.facility_id,
+      label: draft.label.trim(),
+      brand: draft.brand.trim() || null,
+      model: draft.model.trim() || null,
+      connection: draft.connection,
+      mode: draft.mode,
+      endpoint_url: draft.endpoint_url.trim() || null,
+      poll_interval_seconds: Number(draft.poll_interval_seconds) || 300,
+      notes: draft.notes.trim() || null,
+    });
+    setDeviceMsg(error ? error.message : "Device saved.");
+    if (!error) setDraft({ ...emptyDevice, facility_id: draft.facility_id });
+    void load();
+  };
+
+  const removeDevice = async (id: string) => {
+    await supabase.from("facility_devices").delete().eq("id", id);
+    void load();
+  };
 
   useEffect(() => { void load(); }, [load]);
 
