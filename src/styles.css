@@ -25,3 +25,4 @@
 .pay-options{display:grid;gap:.4rem;margin:1rem 0}.pay-options>span{font-size:.62rem;font-weight:800;text-transform:uppercase;color:var(--muted-foreground)}.pay-option{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:.65rem .75rem;text-align:left;font-size:.76rem;font-weight:700}.pay-option.selected{border-color:var(--primary);background:var(--secondary);color:var(--secondary-foreground)}
 .drawer-body a.btn-primary,.empty-state a.btn-primary{text-decoration:none}
 @media (max-width:900px){.auth-page{grid-template-columns:1fr}.auth-side{padding:2rem 1.25rem}}
+.admin-panel h2{display:flex;align-items:center;gap:.45rem}.key-cell{max-width:12rem;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,monospace;font-size:.62rem;color:var(--muted-foreground)}.admin-panel code{font-size:.68rem;color:var(--primary)}

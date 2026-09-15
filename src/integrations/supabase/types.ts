@@ -124,6 +124,68 @@ export type Database = {
         }
         Relationships: []
       }
+      facility_devices: {
+        Row: {
+          active: boolean
+          brand: string | null
+          connection: string
+          created_at: string
+          device_key: string
+          endpoint_url: string | null
+          facility_id: string
+          id: string
+          label: string
+          last_seen_at: string | null
+          mode: string
+          model: string | null
+          notes: string | null
+          poll_interval_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          connection?: string
+          created_at?: string
+          device_key?: string
+          endpoint_url?: string | null
+          facility_id: string
+          id?: string
+          label: string
+          last_seen_at?: string | null
+          mode?: string
+          model?: string | null
+          notes?: string | null
+          poll_interval_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          connection?: string
+          created_at?: string
+          device_key?: string
+          endpoint_url?: string | null
+          facility_id?: string
+          id?: string
+          label?: string
+          last_seen_at?: string | null
+          mode?: string
+          model?: string | null
+          notes?: string | null
+          poll_interval_seconds?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_devices_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string

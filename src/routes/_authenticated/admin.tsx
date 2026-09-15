@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Check, LogOut, ShieldCheck, Thermometer, X } from "lucide-react";
+import { Check, Cpu, LogOut, Plus, ShieldCheck, Thermometer, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, money } from "@/lib/session";
 import brandAsset from "@/assets/lpres-brand.png.asset.json";
@@ -13,6 +13,12 @@ type AdminBooking = {
   email: string | null; facility_id: string; facilities: { name: string; code: string } | null;
 };
 type Facility = { id: string; name: string; code: string; capacity: number };
+type Device = {
+  id: string; facility_id: string; label: string; brand: string | null; model: string | null;
+  connection: string; mode: string; endpoint_url: string | null; poll_interval_seconds: number;
+  device_key: string; active: boolean; last_seen_at: string | null; notes: string | null;
+};
+const emptyDevice = { facility_id: "fct", label: "", brand: "", model: "", connection: "wifi", mode: "pull", endpoint_url: "", poll_interval_seconds: "300", notes: "" };
 
 function Admin() {
   const navigate = useNavigate();
@@ -22,15 +28,43 @@ function Admin() {
   const [facilityId, setFacilityId] = useState("fct");
   const [reading, setReading] = useState("3.2");
   const [saved, setSaved] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [draft, setDraft] = useState(emptyDevice);
+  const [deviceMsg, setDeviceMsg] = useState("");
 
   const load = useCallback(async () => {
-    const [{ data: b }, { data: f }] = await Promise.all([
+    const [{ data: b }, { data: f }, { data: d }] = await Promise.all([
       supabase.from("bookings").select("id,reference,storage_class,pallets,start_date,days,total_amount,status,payment_status,organisation,contact_name,email,facility_id,facilities(name,code)").order("created_at", { ascending: false }),
       supabase.from("facilities").select("id,name,code,capacity").order("sort_order"),
+      supabase.from("facility_devices").select("id,facility_id,label,brand,model,connection,mode,endpoint_url,poll_interval_seconds,device_key,active,last_seen_at,notes").order("created_at", { ascending: false }),
     ]);
     setBookings((b as unknown as AdminBooking[]) ?? []);
     setFacilities((f as Facility[]) ?? []);
+    setDevices((d as Device[]) ?? []);
   }, []);
+
+  const saveDevice = async () => {
+    if (!draft.label.trim()) { setDeviceMsg("Give the device a name first."); return; }
+    const { error } = await supabase.from("facility_devices").insert({
+      facility_id: draft.facility_id,
+      label: draft.label.trim(),
+      brand: draft.brand.trim() || null,
+      model: draft.model.trim() || null,
+      connection: draft.connection,
+      mode: draft.mode,
+      endpoint_url: draft.endpoint_url.trim() || null,
+      poll_interval_seconds: Number(draft.poll_interval_seconds) || 300,
+      notes: draft.notes.trim() || null,
+    });
+    setDeviceMsg(error ? error.message : "Device saved.");
+    if (!error) setDraft({ ...emptyDevice, facility_id: draft.facility_id });
+    void load();
+  };
+
+  const removeDevice = async (id: string) => {
+    await supabase.from("facility_devices").delete().eq("id", id);
+    void load();
+  };
 
   useEffect(() => { void load(); }, [load]);
 
@@ -90,6 +124,57 @@ function Admin() {
                 <button className="btn-primary" onClick={logReading}><Thermometer /> Save reading</button>
               </div>
               {saved && <p className="auth-message"><Check /> Reading saved to the facility log.</p>}
+            </article>
+
+            <article className="admin-panel">
+              <h2><Cpu /> Sensors and cameras</h2>
+              <p className="log-meta">Register each cold-room device here as soon as you have the details. Devices that can push send their readings to <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/sensor-readings</code> with their own device key in the <code>x-device-key</code> header; readings land in that facility&rsquo;s temperature log automatically.</p>
+              <div className="admin-form">
+                <label className="form-field"><span>Facility</span>
+                  <select value={draft.facility_id} onChange={(e) => setDraft({ ...draft, facility_id: e.target.value })}>
+                    {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </label>
+                <label className="form-field"><span>Device name</span><input value={draft.label} placeholder="Chamber 1 probe" onChange={(e) => setDraft({ ...draft, label: e.target.value })} /></label>
+                <label className="form-field"><span>Brand</span><input value={draft.brand} placeholder="To be confirmed" onChange={(e) => setDraft({ ...draft, brand: e.target.value })} /></label>
+                <label className="form-field"><span>Model</span><input value={draft.model} placeholder="To be confirmed" onChange={(e) => setDraft({ ...draft, model: e.target.value })} /></label>
+                <label className="form-field"><span>Connection</span>
+                  <select value={draft.connection} onChange={(e) => setDraft({ ...draft, connection: e.target.value })}>
+                    <option value="wifi">Wi-Fi router</option>
+                    <option value="sim">SIM / mobile data</option>
+                    <option value="gateway">On-site gateway box</option>
+                  </select>
+                </label>
+                <label className="form-field"><span>Reading method</span>
+                  <select value={draft.mode} onChange={(e) => setDraft({ ...draft, mode: e.target.value })}>
+                    <option value="pull">We pull from the device</option>
+                    <option value="push">Device pushes to us</option>
+                  </select>
+                </label>
+                <label className="form-field"><span>Device address / URL</span><input value={draft.endpoint_url} placeholder="http://192.168.1.50/api/temp" onChange={(e) => setDraft({ ...draft, endpoint_url: e.target.value })} /></label>
+                <label className="form-field"><span>Read every (seconds)</span><input value={draft.poll_interval_seconds} onChange={(e) => setDraft({ ...draft, poll_interval_seconds: e.target.value })} /></label>
+                <label className="form-field"><span>Notes</span><input value={draft.notes} placeholder="Camera also covers loading bay" onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></label>
+                <button className="btn-primary" onClick={saveDevice}><Plus /> Save device</button>
+              </div>
+              {deviceMsg && <p className="auth-message"><Check /> {deviceMsg}</p>}
+              <table className="log-table">
+                <thead><tr><th>Facility</th><th>Device</th><th>Brand / model</th><th>Connection</th><th>Method</th><th>Device key</th><th>Last seen</th><th /></tr></thead>
+                <tbody>
+                  {devices.map((d) => (
+                    <tr key={d.id}>
+                      <td>{facilities.find((f) => f.id === d.facility_id)?.name ?? d.facility_id}</td>
+                      <td><strong>{d.label}</strong></td>
+                      <td>{[d.brand, d.model].filter(Boolean).join(" ") || "Awaiting details"}</td>
+                      <td>{d.connection === "wifi" ? "Wi-Fi router" : d.connection === "sim" ? "SIM" : "Gateway"}</td>
+                      <td>{d.mode === "push" ? "Device pushes" : `We pull every ${d.poll_interval_seconds}s`}</td>
+                      <td className="key-cell">{d.device_key}</td>
+                      <td>{d.last_seen_at ? new Date(d.last_seen_at).toLocaleString("en-NG") : "Never"}</td>
+                      <td className="admin-actions"><button className="btn-secondary" onClick={() => removeDevice(d.id)}><Trash2 /> Remove</button></td>
+                    </tr>
+                  ))}
+                  {devices.length === 0 && <tr><td colSpan={8}>No devices registered yet — add one as soon as the sensor details arrive.</td></tr>}
+                </tbody>
+              </table>
             </article>
 
             <article className="admin-panel">
